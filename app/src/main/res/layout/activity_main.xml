@@ -41,7 +41,7 @@
             android:layout_below="@+id/editText"
             android:layout_toEndOf="@+id/buttonStart"
             android:layout_toRightOf="@+id/buttonStart"
-            android:onClick="onClickStart"
+            android:onClick="onClickEnd"
             android:text="End" />
 
         <Button
@@ -51,7 +51,7 @@
             android:layout_below="@+id/editText"
             android:layout_toLeftOf="@+id/buttonClear"
             android:layout_toStartOf="@+id/buttonClear"
-            android:onClick="onClickStart"
+            android:onClick="onClickSend"
             android:text="Send" />
 
         <Button
@@ -61,7 +61,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_below="@+id/editText"
-            android:onClick="onClickStart"
+            android:onClick="onClickClear"
             android:text="Clear" />
 
         <TextView
@@ -74,5 +74,14 @@
             android:layout_alignParentStart="true"
             android:layout_alignRight="@+id/editText"
             android:layout_below="@+id/buttonSend" />
+
+        <ListView
+            android:id="@+id/listView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="157dp" />
     </RelativeLayout>
 </android.support.constraint.ConstraintLayout>
