@@ -1,10 +1,17 @@
 package com.example.kirigamisolarcells_2;
 
+import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+
+import java.io.IOException;
 import java.util.Set;
 import java.util.ArrayList;
 import android.widget.Toast;
@@ -18,16 +25,16 @@ import android.bluetooth.BluetoothDevice;
 public class MainActivity extends AppCompatActivity {
 
     Button btnStart, btnEnd, btnSend, btnClear;     //Button variables for controls
-    ListView devicelist;                            //ListView variable for the list of connected devices
     private BluetoothAdapter myBluetooth = null;    //BluetoothAdapter variable to control bluetooth
     private Set<BluetoothDevice> pairedDevices;                      //Set variable for list of connected devices
+    ConnectThread connection;
 
     public MainActivity(){
         btnStart = (Button)findViewById(R.id.buttonStart);
         btnEnd = (Button)findViewById(R.id.buttonStop);
         btnSend = (Button)findViewById(R.id.buttonSend);
         btnClear = (Button)findViewById(R.id.buttonClear);
-        devicelist = (ListView)findViewById(R.id.listView);
+        //devicelist = (ListView)findViewById(R.id.listView);
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
     }
 
@@ -35,7 +42,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // Register for broadcasts when a device is discovered.
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mReceiver, filter);
     }
+
+    // Create a BroadcastReceiver for ACTION_FOUND.
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Discovery has found a device. Get the BluetoothDevice
+                // object and its info from the Intent.
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                connect(device);
+            }
+        }
+    };
 
     //Function allows ListView to be clicked
     private AdapterView.OnItemClickListener myListClickListener = new AdapterView.OnItemClickListener()
@@ -53,17 +76,19 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    //Function for the paired Devices List
+    //Querying paired devices
     private void pairedDevicesList()
     {
         pairedDevices = myBluetooth.getBondedDevices();
         ArrayList list = new ArrayList();
+        String deviceName;
+        String deviceHardwareAddress;
 
         if (pairedDevices.size()>0)
         {
-            for(BluetoothDevice bt : pairedDevices)
+            for(BluetoothDevice device : pairedDevices)
             {
-                list.add(bt.getName() + "\n" + bt.getAddress()); //Get the device's name and the address
+                connect(device);//connect the device
             }
         }
         else
@@ -71,10 +96,19 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.", Toast.LENGTH_LONG).show();
         }
 
-        final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, list);
+        /*final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, list);
         devicelist.setAdapter(adapter);
-        devicelist.setOnItemClickListener(myListClickListener); //Method called when the device from the list is clicked
+        devicelist.setOnItemClickListener(myListClickListener); //Method called when the device from the list is clicked*/
 
+    }
+
+    public void connect(BluetoothDevice device){
+        String deviceName = device.getName();
+        String deviceHardwareAddress = device.getAddress();
+        connection = new ConnectThread(device);
+        // Cancel discovery because it otherwise slows down the connection.
+        myBluetooth.cancelDiscovery();
+        connection.run();
     }
 
     //When 'Start' Button called
@@ -88,13 +122,11 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-            if (myBluetooth.isEnabled())
-            { }
-            else
+            if (!myBluetooth.isEnabled())
             {
                 //Ask to the user turn the bluetooth on
                 Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(turnBTon,1);
+                startActivityForResult(turnBTon,1);//REQUEST_ENABLE_BT = 1
             }
         }
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -104,10 +136,15 @@ public class MainActivity extends AppCompatActivity {
                 pairedDevicesList(); //method that will be called
             }
         });
+        //making the device discoverable
+        /*Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);//add extra time
+        startActivity(discoverableIntent);*/
     }
 
     //When 'End' Button called
     public void onClickEnd(View view) {
+        connection.cancel();
     }
 
     //When 'Send' Button called
@@ -117,4 +154,14 @@ public class MainActivity extends AppCompatActivity {
     //When 'Clear' Button called
     public void onClickClear(View view) {
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // Don't forget to unregister the ACTION_FOUND receiver.
+        unregisterReceiver(mReceiver);
+    }
 }
+
+
