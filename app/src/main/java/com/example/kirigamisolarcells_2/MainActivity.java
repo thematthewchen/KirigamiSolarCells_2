@@ -24,24 +24,24 @@ import android.bluetooth.BluetoothDevice;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button btnStart, btnEnd, btnSend, btnClear;     //Button variables for controls
+    Button btnStart, btnEnd, btnSend, btnClear;//Button variables for controls
     private BluetoothAdapter myBluetooth = null;    //BluetoothAdapter variable to control bluetooth
     private Set<BluetoothDevice> pairedDevices;                      //Set variable for list of connected devices
     ConnectThread connection;
 
     public MainActivity(){
-        btnStart = (Button)findViewById(R.id.buttonStart);
-        btnEnd = (Button)findViewById(R.id.buttonStop);
-        btnSend = (Button)findViewById(R.id.buttonSend);
-        btnClear = (Button)findViewById(R.id.buttonClear);
         //devicelist = (ListView)findViewById(R.id.listView);
-        myBluetooth = BluetoothAdapter.getDefaultAdapter();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        btnStart = (Button)findViewById(R.id.buttonStart);
+        btnEnd = (Button)findViewById(R.id.buttonStop);
+        btnSend = (Button)findViewById(R.id.buttonSend);
+        btnClear = (Button)findViewById(R.id.buttonClear);
+        myBluetooth = BluetoothAdapter.getDefaultAdapter();
         // Register for broadcasts when a device is discovered.
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(mReceiver, filter);
@@ -144,15 +144,35 @@ public class MainActivity extends AppCompatActivity {
 
     //When 'End' Button called
     public void onClickEnd(View view) {
-        connection.cancel();
+        btnEnd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                connection.cancel(); //method that will be called
+            }
+        });
     }
 
     //When 'Send' Button called
     public void onClickSend(View view) {
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                //connection.cancel(); //method that will be called
+            }
+        });
     }
 
     //When 'Clear' Button called
     public void onClickClear(View view) {
+        btnClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                //connection.cancel(); //method that will be called
+            }
+        });
     }
 
     @Override
