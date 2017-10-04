@@ -8,12 +8,13 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * Created by thema on 10/2/2017.
+ * Created by Matthew Chen on 10/2/2017.
  */
 
 public class ConnectThread extends Thread {
     private final BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
+    private ConnectedThread manage;
 
     public ConnectThread(BluetoothDevice device) {
         // Use a temporary object that is later assigned to mmSocket
@@ -27,13 +28,12 @@ public class ConnectThread extends Thread {
         UUID DEFAULT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
         try {
-            // Use the UUID of the device that discovered // TODO Maybe need extra device object
+            // Use the UUID of the device that discovered
             if (mmDevice != null)
             {
                 Log.i("NameDevice", "Device Name: " + mmDevice.getName());
                 Log.i("UUIDDevice", "Device UUID: " + mmDevice.getUuids()[0].getUuid());
                 tmp = device.createRfcommSocketToServiceRecord(mmDevice.getUuids()[0].getUuid());
-
             }
             else Log.d("DeviceNull", "Device is null.");
         }
@@ -52,6 +52,7 @@ public class ConnectThread extends Thread {
         mmSocket = tmp;
     }
 
+    // Connect to the remote device through the socket.
     public void run() {
         try {
             // Connect to the remote device through the socket. This call blocks
@@ -69,7 +70,14 @@ public class ConnectThread extends Thread {
 
         // The connection attempt succeeded. Perform work associated with
         // the connection in a separate thread.
-        //manageMyConnectedSocket(mmSocket);
+        manageMyConnectedSocket(mmSocket);
+    }
+
+    // The connection attempt succeeded. Perform work associated with
+    // the connection in a separate thread.
+    public void manageMyConnectedSocket(BluetoothSocket currentSocket){
+        manage = new ConnectedThread(currentSocket);
+        manage.run();
     }
 
     // Closes the client socket and causes the thread to finish.
