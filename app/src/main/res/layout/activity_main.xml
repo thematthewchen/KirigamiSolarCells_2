@@ -1,65 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.kirigamisolarcells_2.MainActivity"
+    android:background="@drawable/k_pvgraphics"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.kirigamisolarcells_2.MainActivity"
-    tools:layout_editor_absoluteX="0dp"
-    tools:layout_editor_absoluteY="81dp">
+    tools:layout_editor_absoluteX="4dp"
+    tools:layout_editor_absoluteY="9dp">
 
-    <RelativeLayout
-        android:layout_width="368dp"
-        android:layout_height="214dp"
-        tools:layout_editor_absoluteX="4dp"
-        tools:layout_editor_absoluteY="9dp">
+    <EditText
+        android:id="@+id/inputText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="0dp"
+        android:hint="Enter some text to send over Bluetooth"
+        android:background="@color/colorAccent"
+        android:layout_above="@+id/editText"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="106dp" />
 
-        <EditText
-            android:id="@+id/inputText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:elevation="0dp"
-            android:hint="Enter some text to send over Bluetooth" />
+    <Button
+        android:id="@+id/buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:elevation="24dp"
+        android:onClick="onClickSend"
+        android:text="Send"
+        android:typeface="monospace" />
 
-        <Button
-            android:id="@+id/buttonSend"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:elevation="24dp"
-            android:onClick="onClickSend"
-            android:text="Orient"
-            android:typeface="monospace" />
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/inputText"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/inputText"
+        android:layout_below="@+id/buttonSend"
+        android:background="@color/colorAccent"/>
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignEnd="@+id/inputText"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignRight="@+id/inputText"
-            android:layout_below="@+id/buttonSend" />
+    <TextView
+        android:id="@+id/receivedText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:text="Received Text"
+        android:typeface="monospace"
+        tools:textSize="24sp"
+        android:background="@color/colorAccent"
+        android:layout_above="@+id/inputText"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="168dp" />
 
-        <TextView
-            android:id="@+id/receivedText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/inputText"
-            android:layout_marginTop="30dp"
-            android:clickable="false"
-            android:text="Received Text"
-            android:typeface="monospace"
-            tools:textSize="24sp" />
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="49dp"
+        android:ems="10"
+        android:inputType="numberDecimal"
+        android:text="Watts Generated: "
+        android:background="@color/colorAccent"
+        android:layout_above="@+id/buttonSend"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
-    </RelativeLayout>
-</android.support.constraint.ConstraintLayout>
+
+</RelativeLayout>
