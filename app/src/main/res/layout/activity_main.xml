@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.kirigamisolarcells_2.MainActivity"
-    android:background="@drawable/k_pvgraphics"
+    android:background="@drawable/k_pvgraphics2"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:layout_editor_absoluteX="4dp"
@@ -11,15 +11,16 @@
 
     <EditText
         android:id="@+id/inputText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:elevation="0dp"
+        android:layout_width="350dp"
+        android:layout_height="30dp"
+        android:layout_above="@+id/receivedText"
+        android:layout_centerHorizontal="true"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="163dp"
+        android:background="@drawable/roundedcorner"
+        android:elevation="10dp"
         android:hint="Enter some text to send over Bluetooth"
-        android:background="@color/colorAccent"
-        android:layout_above="@+id/editText"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="106dp" />
+        />
 
     <Button
         android:id="@+id/buttonSend"
@@ -32,44 +33,61 @@
         android:text="Send"
         android:typeface="monospace" />
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/inputText"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignRight="@+id/inputText"
-        android:layout_below="@+id/buttonSend"
-        android:background="@color/colorAccent"/>
 
     <TextView
         android:id="@+id/receivedText"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/editText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
         android:clickable="false"
         android:text="Received Text"
-        android:typeface="monospace"
-        tools:textSize="24sp"
-        android:background="@color/colorAccent"
-        android:layout_above="@+id/inputText"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="168dp" />
+
+        tools:textSize="24sp" />
 
     <EditText
         android:id="@+id/editText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="49dp"
+        android:layout_marginBottom="79dp"
         android:ems="10"
         android:inputType="numberDecimal"
         android:text="Watts Generated: "
-        android:background="@color/colorAccent"
         android:layout_above="@+id/buttonSend"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignLeft="@+id/gpstext"
+        android:layout_alignStart="@+id/gpstext" />
+
+    <TextView
+        android:id="@+id/gpstext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="43dp"
+        android:text="GPS Not Found"
+        android:layout_alignTop="@+id/editText"
+        android:layout_toLeftOf="@+id/buttonSend"
+        android:layout_toStartOf="@+id/buttonSend" />
+
+    <TextView
+        android:id="@+id/bluetoothtext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/gpstext"
+        android:layout_alignStart="@+id/gpstext"
+        android:layout_below="@+id/gpstext"
+        android:text="Bluetooth Not Enabled"
+         />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="Kirigami Solar"
+        android:textColor="@color/colorAccent"
+        android:textSize="30sp" />
 
 
 </RelativeLayout>

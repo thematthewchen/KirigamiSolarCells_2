@@ -4,8 +4,11 @@ import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
+import android.support.constraint.solver.widgets.Rectangle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -39,8 +42,11 @@ public class MainActivity extends AppCompatActivity {
     BluetoothDevice mDevice;
     private EditText userinput;
     String mainText;
+    //private Rect rect;
+    //private Paint paint;
 
     public MainActivity(){
+        //rect = new Rect();
     }
 
     @Override
@@ -66,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(turnBTon,1);//REQUEST_ENABLE_BT = 1
         }
         else{
+            String temp = "Bluetooth Enabled";
+            ((TextView) findViewById(R.id.bluetoothtext)).setText(temp);
             Toast.makeText(getApplicationContext(), "Bluetooth Enabled", Toast.LENGTH_LONG).show();
         }
         pairedDevicesList();
