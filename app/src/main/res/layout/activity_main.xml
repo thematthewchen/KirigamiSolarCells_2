@@ -13,58 +13,56 @@
         android:id="@+id/inputText"
         android:layout_width="350dp"
         android:layout_height="30dp"
-        android:layout_above="@+id/receivedText"
-        android:layout_centerHorizontal="true"
-        android:layout_centerInParent="true"
-        android:layout_marginBottom="163dp"
         android:background="@drawable/roundedcorner"
         android:elevation="10dp"
         android:hint="Enter some text to send over Bluetooth"
-        />
+        android:layout_marginTop="34dp"
+        android:layout_below="@+id/title"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:id="@+id/buttonSend"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:elevation="24dp"
         android:onClick="onClickSend"
         android:text="Send"
-        android:typeface="monospace" />
+        android:typeface="monospace"
+        android:layout_marginTop="34dp"
+        android:layout_alignTop="@+id/inputText"
+        android:layout_centerHorizontal="true" />
 
 
     <TextView
         android:id="@+id/receivedText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/editText"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="16dp"
         android:clickable="false"
         android:text="Received Text"
 
-        tools:textSize="24sp" />
+        tools:textSize="24sp"
+        android:layout_above="@+id/editText"
+        android:layout_centerHorizontal="true" />
 
     <EditText
         android:id="@+id/editText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="79dp"
         android:ems="10"
         android:inputType="numberDecimal"
         android:text="Watts Generated: "
-        android:layout_above="@+id/buttonSend"
-        android:layout_alignLeft="@+id/gpstext"
-        android:layout_alignStart="@+id/gpstext" />
+        android:layout_above="@+id/gpstext"
+        android:layout_alignLeft="@+id/inputText"
+        android:layout_alignStart="@+id/inputText"
+        android:layout_marginLeft="22dp"
+        android:layout_marginStart="22dp" />
 
     <TextView
         android:id="@+id/gpstext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="43dp"
         android:text="GPS Not Found"
-        android:layout_alignTop="@+id/editText"
+        android:layout_above="@+id/bluetoothtext"
         android:layout_toLeftOf="@+id/buttonSend"
         android:layout_toStartOf="@+id/buttonSend" />
 
@@ -72,11 +70,11 @@
         android:id="@+id/bluetoothtext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/gpstext"
-        android:layout_alignStart="@+id/gpstext"
-        android:layout_below="@+id/gpstext"
         android:text="Bluetooth Not Enabled"
-         />
+        android:layout_marginBottom="78dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/gpstext"
+        android:layout_alignStart="@+id/gpstext" />
 
     <TextView
         android:id="@+id/title"

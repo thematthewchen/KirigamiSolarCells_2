@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
@@ -235,14 +236,56 @@ public class MainActivity extends AppCompatActivity {
         }
         public void run() {
             byte[] buffer = new byte[1024];
+            //char[] chars= new char[1024];
             int numBytes; // bytes returned from read()
             int begin = 0;
             int bytes = 0;
             while (true) {
                 try {
                     // Read from the InputStream.
-                    numBytes = mmInStream.read(buffer);
-                    String readMessage = new String(buffer, 0, bytes);
+                    buffer[bytes] = (byte)mmInStream.read();
+                    if ((buffer[bytes] == '\n'))
+                    {
+                        //String s1 = Arrays.toString(buffer);
+                        String readMessage = new String(buffer, 0, bytes);
+                        String finalMessage = "";
+                        String letter = "";
+                        //Hardcoding reading the byte array input
+                        boolean next = true;
+                        //boolean read = false;
+                        int count = 0;//temporary count variable for each increase
+                        int maxnext = 2;//the max that count will go
+                        for(int i = 0; i < readMessage.length(); ++i){
+                            if(next){
+                                if(readMessage.charAt(i) == '1'){
+                                    maxnext = 3;//read a 3 digit number
+                                }
+                                else{
+                                    maxnext = 2;//read a 2 digit number
+                                }
+                                next = false;
+                                count = 0;
+                            }
+                            ++count;
+                            letter += readMessage.charAt(i);
+                            if(count == maxnext){
+                                finalMessage += (char)Integer.parseInt(letter);
+                                next = true;
+                                letter = "";
+                                //read = true;
+                            }
+                        }
+                        //if(read){
+                            Message readMsg = mHandler.obtainMessage(0, bytes, -1, finalMessage);
+                            readMsg.sendToTarget();
+                        //}
+                        bytes=0;
+                    }
+                    else {
+                        bytes++;
+                    }
+                    //mHandler.obtainMessage(0, numBytes, -1, buffer).sendToTarget();
+                    /*String readMessage = new String(buffer, 0, numBytes);
                     if(readMessage.charAt((int)readMessage.length() - 1) == '#'){
                         // Send the obtained bytes to the UI activity.
                         Message readMsg = mHandler.obtainMessage(1, numBytes, -1, readMessage);
@@ -252,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
                         // Send the obtained bytes to the UI activity.
                         Message readMsg = mHandler.obtainMessage(0, numBytes, -1, readMessage);
                         readMsg.sendToTarget();
-                    }
+                    }*/
                     /*
                     bytes += mmInStream.read(buffer, bytes, buffer.length - bytes);
                     for(int i = begin; i < bytes; i++) {
@@ -289,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
     Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            /*byte[] writeBuf = (byte[]) msg.obj;
+            /*
             String writeMessage;
             int begin = (int)msg.arg1;
             int end = (int)msg.arg2;
@@ -304,19 +347,24 @@ public class MainActivity extends AppCompatActivity {
                 throw new AssertionError("UTF-8 is unknown");
             }*/
             //writeMessage = writeMessage.substring(begin, end);*/
-            switch(msg.what){
+           switch(msg.what){
                 case 0:
+                    //byte[] writeBuf = (byte[]) msg.obj;
+                    //String readMessage = new String(writeBuf, 0, msg.arg1);
                     String readMessage = (String) msg.obj;
-                    if (msg.arg1 > 0) {
-                        mainText += readMessage;
+                    if(readMessage.length() > 0){
+                        Toast.makeText(MainActivity.this, readMessage, Toast.LENGTH_SHORT).show();
                     }
-                case 1:
+                    /*if (msg.arg1 > 0) {
+                        mainText += readMessage;
+                    }*/
+                /*case 1:
                     String readMessage2 = (String) msg.obj;
                     if (msg.arg1 > 0) {
                         mainText += readMessage2.substring(0, (int)readMessage2.length() - 1);
                     }
                     ((TextView) findViewById(R.id.receivedText)).setText(mainText);
-                    Toast.makeText(getApplicationContext(), mainText, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), mainText, Toast.LENGTH_LONG).show();*/
             }
         }
     };
