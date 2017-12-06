@@ -1,18 +1,26 @@
 package com.example.kirigamisolarcells_2;
 
+import android.Manifest;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Message;
 import android.support.constraint.solver.widgets.Rectangle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -23,6 +31,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
@@ -33,15 +42,29 @@ import android.content.Intent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 
-public class MainActivity extends AppCompatActivity {
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
-    Button btnSend;//Button variables for controls
+public class MainActivity extends AppCompatActivity{
+
+    protected LocationManager locationManager;
+    protected LocationListener locationListener;
+    protected Context context;
+    TextView txtLat;
+    String lat;
+    String provider;
+    protected String latitude,longitude;
+    protected boolean gps_enabled,network_enabled;
+    Button btnSend, locationbutton;//Button variables for controls
     private BluetoothAdapter myBluetooth = null;    //BluetoothAdapter variable to control bluetooth
     private Set<BluetoothDevice> pairedDevices;                      //Set variable for list of connected devices
     ConnectThread connection;
     ConnectedThread mConnectedThread;
     BluetoothDevice mDevice;
     private EditText userinput;
+    private FusedLocationProviderClient mFusedLocationClient;
     String mainText;
     //private Rect rect;
     //private Paint paint;
@@ -53,8 +76,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         btnSend = (Button)findViewById(R.id.buttonSend);
+        locationbutton = (Button)findViewById(R.id.khalid);
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
         // Register for broadcasts when a device is discovered.
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -73,10 +98,9 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(turnBTon,1);//REQUEST_ENABLE_BT = 1
         }
         else{
-            String temp = "Bluetooth Enabled";
-            ((TextView) findViewById(R.id.bluetoothtext)).setText(temp);
             Toast.makeText(getApplicationContext(), "Bluetooth Enabled", Toast.LENGTH_LONG).show();
         }
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         pairedDevicesList();
     }
 
@@ -129,6 +153,41 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //When 'Location' Button called
+    public void onClickLocation(View view) {
+        locationbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                sendLocation();
+            }
+        });
+    }
+
+    public void sendLocation(){
+        try {
+            mFusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+                                // Logic to handle location object
+                            }
+                            final double latitude = location.getLatitude();
+                            final double longitude = location.getLongitude();
+                            String status;
+                            status = latitude + "#" + longitude + "\0";
+                            mConnectedThread.write(status.getBytes());
+                        }
+                    });
+        } catch (SecurityException e) {
+            Toast.makeText(MainActivity.this, "Turn on Your Location To Orient the Solar Panels", Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -151,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
         private ConnectedThread manage;
+        //private boolean isconnected = false;
 
         public ConnectThread(BluetoothDevice device) {
             // Use a temporary object that is later assigned to mmSocket
@@ -190,11 +250,13 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException closeException) {
                     Log.e("CloseSocket", "Could not close the client socket", closeException);
                 }
+                //isconnected = false;
                 return;
             }
-
+            //isconnected = true;
             mConnectedThread = new ConnectedThread(mmSocket);
             mConnectedThread.start();
+
             // The connection attempt succeeded. Perform work associated with
             // the connection in a separate thread.
             //manageMyConnectedSocket(mmSocket, input);
@@ -354,6 +416,8 @@ public class MainActivity extends AppCompatActivity {
                     String readMessage = (String) msg.obj;
                     if(readMessage.length() > 0){
                         Toast.makeText(MainActivity.this, readMessage, Toast.LENGTH_SHORT).show();
+                        ((TextView) findViewById(R.id.receivedText)).setText(readMessage);
+                        //Toast.makeText(getApplicationContext(), readMessage, Toast.LENGTH_LONG).show();
                     }
                     /*if (msg.arg1 > 0) {
                         mainText += readMessage;

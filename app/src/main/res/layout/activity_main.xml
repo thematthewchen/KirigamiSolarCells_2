@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.kirigamisolarcells_2.MainActivity"
-    android:background="@drawable/k_pvgraphics2"
+    android:background="@drawable/k_pv3"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:layout_editor_absoluteX="4dp"
@@ -26,55 +26,45 @@
         android:layout_height="wrap_content"
         android:elevation="24dp"
         android:onClick="onClickSend"
-        android:text="Send"
+        android:text="ORIENT"
         android:typeface="monospace"
-        android:layout_marginTop="34dp"
-        android:layout_alignTop="@+id/inputText"
-        android:layout_centerHorizontal="true" />
+        android:layout_below="@+id/inputText"
+        android:layout_alignLeft="@+id/title"
+        android:layout_alignStart="@+id/title" />
 
 
     <TextView
         android:id="@+id/receivedText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/watts"
+        android:layout_centerHorizontal="true"
+
+        android:layout_marginBottom="11dp"
         android:clickable="false"
         android:text="Received Text"
-
-        tools:textSize="24sp"
-        android:layout_above="@+id/editText"
-        android:layout_centerHorizontal="true" />
-
-    <EditText
-        android:id="@+id/editText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="numberDecimal"
-        android:text="Watts Generated: "
-        android:layout_above="@+id/gpstext"
-        android:layout_alignLeft="@+id/inputText"
-        android:layout_alignStart="@+id/inputText"
-        android:layout_marginLeft="22dp"
-        android:layout_marginStart="22dp" />
+        tools:textSize="24sp" />
 
     <TextView
         android:id="@+id/gpstext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="GPS Not Found"
+        android:typeface="monospace"
         android:layout_above="@+id/bluetoothtext"
-        android:layout_toLeftOf="@+id/buttonSend"
-        android:layout_toStartOf="@+id/buttonSend" />
+        android:layout_toLeftOf="@+id/khalid"
+        android:layout_toStartOf="@+id/khalid" />
 
     <TextView
         android:id="@+id/bluetoothtext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Bluetooth Not Enabled"
-        android:layout_marginBottom="78dp"
-        android:layout_alignParentBottom="true"
         android:layout_alignLeft="@+id/gpstext"
-        android:layout_alignStart="@+id/gpstext" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/gpstext"
+        android:layout_marginBottom="78dp"
+        android:text="Connecting to Bluetooth..."
+        android:typeface="monospace" />
 
     <TextView
         android:id="@+id/title"
@@ -86,6 +76,26 @@
         android:text="Kirigami Solar"
         android:textColor="@color/colorAccent"
         android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/watts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Watts Generated: "
+        android:textSize="18sp"
+        android:typeface="monospace"
+        android:layout_above="@+id/gpstext"
+        android:layout_alignRight="@+id/receivedText"
+        android:layout_alignEnd="@+id/receivedText" />
+
+    <Button
+        android:id="@+id/khalid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/buttonSend"
+        android:layout_toEndOf="@+id/buttonSend"
+        android:layout_toRightOf="@+id/buttonSend"
+        android:text="Send Location" />
 
 
 </RelativeLayout>
