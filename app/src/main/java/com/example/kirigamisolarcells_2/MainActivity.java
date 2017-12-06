@@ -8,6 +8,10 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -57,7 +61,7 @@ public class MainActivity extends AppCompatActivity{
     String provider;
     protected String latitude,longitude;
     protected boolean gps_enabled,network_enabled;
-    Button btnSend, locationbutton;//Button variables for controls
+    Button btnSend, locationbutton, pitchbutton;//Button variables for controls
     private BluetoothAdapter myBluetooth = null;    //BluetoothAdapter variable to control bluetooth
     private Set<BluetoothDevice> pairedDevices;                      //Set variable for list of connected devices
     ConnectThread connection;
@@ -101,6 +105,58 @@ public class MainActivity extends AppCompatActivity{
             Toast.makeText(getApplicationContext(), "Bluetooth Enabled", Toast.LENGTH_LONG).show();
         }
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        //
+        SensorManager sensorManager = (SensorManager) this.getSystemService(SENSOR_SERVICE);
+
+        final float[] mValuesMagnet      = new float[3];
+        final float[] mValuesAccel       = new float[3];
+        final float[] mValuesOrientation = new float[3];
+        final float[] mRotationMatrix    = new float[9];
+
+        pitchbutton = (Button) findViewById(R.id.pitch);
+        final TextView txt1 = (TextView) findViewById(R.id.gpstext);
+        final SensorEventListener mEventListener = new SensorEventListener() {
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            }
+
+            public void onSensorChanged(SensorEvent event) {
+                // Handle the events for which we registered
+                switch (event.sensor.getType()) {
+                    case Sensor.TYPE_ACCELEROMETER:
+                        System.arraycopy(event.values, 0, mValuesAccel, 0, 3);
+                        break;
+
+                    case Sensor.TYPE_MAGNETIC_FIELD:
+                        System.arraycopy(event.values, 0, mValuesMagnet, 0, 3);
+                        break;
+                }
+            };
+        };
+
+        // You have set the event lisetner up, now just need to register this with the
+        // sensor manager along with the sensor wanted.
+        //setListeners(sensorManager, mEventListener);
+        sensorManager.registerListener(mEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_NORMAL);
+
+        pitchbutton.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View view)
+            {
+                SensorManager.getRotationMatrix(mRotationMatrix, null, mValuesAccel, mValuesMagnet);
+                SensorManager.getOrientation(mRotationMatrix, mValuesOrientation);
+                final CharSequence test;
+                test = "results: " + mValuesOrientation[0] +" "+mValuesOrientation[1]+ " "+ mValuesOrientation[2];
+                txt1.setText(test);
+            }
+        });
+        locationbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                sendLocation();
+            }
+        });
         pairedDevicesList();
     }
 
@@ -155,13 +211,7 @@ public class MainActivity extends AppCompatActivity{
 
     //When 'Location' Button called
     public void onClickLocation(View view) {
-        locationbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                sendLocation();
-            }
-        });
+
     }
 
     public void sendLocation(){
@@ -187,6 +237,34 @@ public class MainActivity extends AppCompatActivity{
 
 
     }
+    /*float[] mGravity;
+    float[] mGeomagnetic;
+    double azimut;
+    double pitch;
+    double roll;
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = event.values;
+
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = event.values;
+
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                azimut = orientation[0]; // orientation contains: azimut, pitch and roll
+                pitch = orientation[1];
+                roll = orientation[2];
+            }
+        }
+    }*/
+
+
 
     @Override
     protected void onDestroy() {

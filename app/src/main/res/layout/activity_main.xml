@@ -97,5 +97,14 @@
         android:layout_toRightOf="@+id/buttonSend"
         android:text="Send Location" />
 
+    <Button
+        android:id="@+id/pitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="15dp"
+        android:text="Get Angle" />
+
 
 </RelativeLayout>
