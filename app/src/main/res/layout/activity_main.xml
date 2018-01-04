@@ -47,13 +47,13 @@
 
     <TextView
         android:id="@+id/gpstext"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="GPS Not Found"
         android:typeface="monospace"
         android:layout_above="@+id/bluetoothtext"
-        android:layout_toLeftOf="@+id/khalid"
-        android:layout_toStartOf="@+id/khalid" />
+        android:layout_alignLeft="@+id/watts"
+        android:layout_alignStart="@+id/watts" />
 
     <TextView
         android:id="@+id/bluetoothtext"
@@ -95,6 +95,7 @@
         android:layout_alignTop="@+id/buttonSend"
         android:layout_toEndOf="@+id/buttonSend"
         android:layout_toRightOf="@+id/buttonSend"
+        android:onClick="onClickLocation"
         android:text="Send Location" />
 
     <Button

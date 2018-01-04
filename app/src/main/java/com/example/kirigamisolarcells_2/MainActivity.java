@@ -1,13 +1,13 @@
 package com.example.kirigamisolarcells_2;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -17,74 +17,71 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Message;
-import android.support.constraint.solver.widgets.Rectangle;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
-
 import android.widget.Toast;
 import android.widget.TextView;
 import android.content.Intent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener{
 
+    //For Getting Current Location
+    String latitude;
+    String longitude;
     protected LocationManager locationManager;
-    protected LocationListener locationListener;
-    protected Context context;
-    TextView txtLat;
-    String lat;
-    String provider;
-    protected String latitude,longitude;
-    protected boolean gps_enabled,network_enabled;
-    Button btnSend, locationbutton, pitchbutton;//Button variables for controls
+    private GoogleApiClient mGoogleApiClient;
+    private Location mLocation;
+    private LocationRequest mLocationRequest;
+    private long UPDATE_INTERVAL = 2 * 1000;  /* 10 secs */
+    private long FASTEST_INTERVAL = 2000; /* 2 sec */
+    private static final int MY_PERMISSION_ACCESS_COARSE_LOCATION = 11;
+
+    //Button variables for controls
+    Button btnSend, locationbutton, pitchbutton;
+
+    //For Bluetooth Connection
     private BluetoothAdapter myBluetooth = null;    //BluetoothAdapter variable to control bluetooth
     private Set<BluetoothDevice> pairedDevices;                      //Set variable for list of connected devices
     ConnectThread connection;
     ConnectedThread mConnectedThread;
     BluetoothDevice mDevice;
     private EditText userinput;
-    private FusedLocationProviderClient mFusedLocationClient;
-    String mainText;
-    //private Rect rect;
-    //private Paint paint;
-
-    public MainActivity(){
-        //rect = new Rect();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE); //to get rid of title on MainActivity
         setContentView(R.layout.activity_main);
+
+        /*
+        Buttons
+         */
         btnSend = (Button)findViewById(R.id.buttonSend);
         locationbutton = (Button)findViewById(R.id.khalid);
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
+
+        /*
+        Bluetooth
+         */
         // Register for broadcasts when a device is discovered.
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(mReceiver, filter);
@@ -104,8 +101,11 @@ public class MainActivity extends AppCompatActivity{
         else{
             Toast.makeText(getApplicationContext(), "Bluetooth Enabled", Toast.LENGTH_LONG).show();
         }
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        //
+        pairedDevicesList();
+
+        /*
+        Getting pitch of Phone (when placed on roof)
+         */
         SensorManager sensorManager = (SensorManager) this.getSystemService(SENSOR_SERVICE);
 
         final float[] mValuesMagnet      = new float[3];
@@ -133,33 +133,45 @@ public class MainActivity extends AppCompatActivity{
             };
         };
 
-        // You have set the event lisetner up, now just need to register this with the
+        // listener needs to be registered with the
         // sensor manager along with the sensor wanted.
-        //setListeners(sensorManager, mEventListener);
-        sensorManager.registerListener(mEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                SensorManager.SENSOR_DELAY_NORMAL);
+        setListners(sensorManager, mEventListener);
 
+        //When the pitchbutton is pushed
         pitchbutton.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View view)
             {
                 SensorManager.getRotationMatrix(mRotationMatrix, null, mValuesAccel, mValuesMagnet);
                 SensorManager.getOrientation(mRotationMatrix, mValuesOrientation);
-                final CharSequence test;
-                test = "results: " + mValuesOrientation[0] +" "+mValuesOrientation[1]+ " "+ mValuesOrientation[2];
-                txt1.setText(test);
+                String test;
+                        //= "angle: " + "90" + "\0";
+                test = "angle: " +mValuesOrientation[1] * (-180.0/3.141415926535);
+                test = test.substring(0, 13) + "\0";
+                mConnectedThread.write(test.getBytes());
+                ((TextView) findViewById(R.id.receivedText)).setText(test);
             }
         });
-        locationbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                sendLocation();
-            }
-        });
-        pairedDevicesList();
-    }
 
+        /*
+        Location
+         */
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        checkLocation();
+    }
+    // Register the event listener and sensor type.
+    public void setListners(SensorManager sensorManager, SensorEventListener mEventListener)
+    {
+        sensorManager.registerListener(mEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(mEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                SensorManager.SENSOR_DELAY_NORMAL);
+    }
     // Create a BroadcastReceiver for ACTION_FOUND.
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -195,6 +207,87 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+    @Override
+    public void onConnected(Bundle bundle) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+
+        startLocationUpdates();
+
+        mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+
+        if(mLocation == null){
+            startLocationUpdates();
+        }
+        if (mLocation != null) {
+            latitude = String.valueOf(mLocation.getLatitude());
+            longitude = String.valueOf(mLocation.getLongitude());
+            String status = "location: " + latitude + "#" + longitude + "\0";
+            ((TextView) findViewById(R.id.gpstext)).setText(status);
+            // mLatitudeTextView.setText(String.valueOf(mLocation.getLatitude()));
+            //mLongitudeTextView.setText(String.valueOf(mLocation.getLongitude()));
+        } else {
+            Toast.makeText(this, "Location not Detected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    protected void startLocationUpdates() {
+        // Create the location request
+        mLocationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(UPDATE_INTERVAL)
+                .setFastestInterval(FASTEST_INTERVAL);
+        // Request location updates
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            ActivityCompat.requestPermissions( this, new String[] {  android.Manifest.permission.ACCESS_COARSE_LOCATION  }, MY_PERMISSION_ACCESS_COARSE_LOCATION);
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        Log.d("reque", "--->>>>");
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.i("connectsus", "Connection Suspended");
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.i("connectfail", "Connection failed. Error: " + connectionResult.getErrorCode());
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
     //When 'Send' Button called
     public void onClickSend(View view) {
         btnSend.setOnClickListener(new View.OnClickListener() {
@@ -211,60 +304,62 @@ public class MainActivity extends AppCompatActivity{
 
     //When 'Location' Button called
     public void onClickLocation(View view) {
-
-    }
-
-    public void sendLocation(){
-        try {
-            mFusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            // Got last known location. In some rare situations this can be null.
-                            if (location != null) {
-                                // Logic to handle location object
-                            }
-                            final double latitude = location.getLatitude();
-                            final double longitude = location.getLongitude();
-                            String status;
-                            status = latitude + "#" + longitude + "\0";
-                            mConnectedThread.write(status.getBytes());
-                        }
-                    });
-        } catch (SecurityException e) {
-            Toast.makeText(MainActivity.this, "Turn on Your Location To Orient the Solar Panels", Toast.LENGTH_SHORT).show();
-        }
-
-
-    }
-    /*float[] mGravity;
-    float[] mGeomagnetic;
-    double azimut;
-    double pitch;
-    double roll;
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-            mGravity = event.values;
-
-        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
-            mGeomagnetic = event.values;
-
-        if (mGravity != null && mGeomagnetic != null) {
-            float R[] = new float[9];
-            float I[] = new float[9];
-
-            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
-            if (success) {
-                float orientation[] = new float[3];
-                SensorManager.getOrientation(R, orientation);
-                azimut = orientation[0]; // orientation contains: azimut, pitch and roll
-                pitch = orientation[1];
-                roll = orientation[2];
+        locationbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                //-83.73 long 42.28 lat
+                String status = "location: " + "-083" + "#" + "042" + "\0";
+                mConnectedThread.write(status.getBytes());
             }
-        }
-    }*/
+        });
+    }
 
+    @Override
+    public void onLocationChanged(Location location) {
+        //txtLat = (TextView) findViewById(R.id.receivedText);
+        //txtLat.setText("Latitude:" + location.getLatitude() + ", Longitude:" + location.getLongitude());
+        String msg = "Updated Location: " +
+                Double.toString(location.getLatitude()) + "," +
+                Double.toString(location.getLongitude());
+        latitude = String.valueOf(location.getLatitude());
+        longitude = String.valueOf(location.getLongitude());
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
 
+    private boolean checkLocation() {
+        if(!isLocationEnabled())
+            showAlert();
+        return isLocationEnabled();
+    }
+
+    private void showAlert() {
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("Enable Location")
+                .setMessage("Your Locations Settings is set to 'Off'.\nPlease Enable Location to " +
+                        "use this app")
+                .setPositiveButton("Location Settings", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+
+                        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(myIntent);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+
+                    }
+                });
+        dialog.show();
+    }
+
+    private boolean isLocationEnabled() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+    }
 
     @Override
     protected void onDestroy() {
@@ -278,7 +373,7 @@ public class MainActivity extends AppCompatActivity{
     *
     *
     *
-    * Separate Thread for Connecting
+    * Separate Thread for Connecting Bluetooth
     *
     *
     *
@@ -354,7 +449,7 @@ public class MainActivity extends AppCompatActivity{
     *
     *
     *
-    * Once connected, calls this class
+    * Once bluetooth connected, calls this class
     *
     *
     *
@@ -424,31 +519,6 @@ public class MainActivity extends AppCompatActivity{
                     else {
                         bytes++;
                     }
-                    //mHandler.obtainMessage(0, numBytes, -1, buffer).sendToTarget();
-                    /*String readMessage = new String(buffer, 0, numBytes);
-                    if(readMessage.charAt((int)readMessage.length() - 1) == '#'){
-                        // Send the obtained bytes to the UI activity.
-                        Message readMsg = mHandler.obtainMessage(1, numBytes, -1, readMessage);
-                        readMsg.sendToTarget();
-                    }
-                    else{
-                        // Send the obtained bytes to the UI activity.
-                        Message readMsg = mHandler.obtainMessage(0, numBytes, -1, readMessage);
-                        readMsg.sendToTarget();
-                    }*/
-                    /*
-                    bytes += mmInStream.read(buffer, bytes, buffer.length - bytes);
-                    for(int i = begin; i < bytes; i++) {
-                        if(buffer[i] == "#".getBytes()[0]) {
-                            mHandler.obtainMessage(1, begin, i, buffer).sendToTarget();
-                            begin = i + 1;
-                            if(i == bytes - 1) {
-                                bytes = 0;
-                                begin = 0;
-                            }
-                        }
-                    }
-                     */
                 } catch (IOException e) {
                     Log.d("read stream", "Input stream was disconnected", e);
                     break;
@@ -472,21 +542,6 @@ public class MainActivity extends AppCompatActivity{
     Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            /*
-            String writeMessage;
-            int begin = (int)msg.arg1;
-            int end = (int)msg.arg2;
-            byte[] hold = new byte[end - begin];
-            char[] temp = new char[end - begin];
-            for(int i = begin; i < end; i++){
-                temp[i] = (char)writeBuf[i];
-            }
-
-                writeMessage = new String(temp);
-            /*catch (UnsupportedEncodingException e) {
-                throw new AssertionError("UTF-8 is unknown");
-            }*/
-            //writeMessage = writeMessage.substring(begin, end);*/
            switch(msg.what){
                 case 0:
                     //byte[] writeBuf = (byte[]) msg.obj;
@@ -497,16 +552,6 @@ public class MainActivity extends AppCompatActivity{
                         ((TextView) findViewById(R.id.receivedText)).setText(readMessage);
                         //Toast.makeText(getApplicationContext(), readMessage, Toast.LENGTH_LONG).show();
                     }
-                    /*if (msg.arg1 > 0) {
-                        mainText += readMessage;
-                    }*/
-                /*case 1:
-                    String readMessage2 = (String) msg.obj;
-                    if (msg.arg1 > 0) {
-                        mainText += readMessage2.substring(0, (int)readMessage2.length() - 1);
-                    }
-                    ((TextView) findViewById(R.id.receivedText)).setText(mainText);
-                    Toast.makeText(getApplicationContext(), mainText, Toast.LENGTH_LONG).show();*/
             }
         }
     };
